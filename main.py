@@ -1,6 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+from datetime import datetime
+from rich.progress import track
+from rich import print
+import time
 
 
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
@@ -13,8 +17,9 @@ HEADERS = {
         "Chrome/120.0.0.0 Safari/537.36"
     )
 }
-KEYWORDS = ["Хватай свой пазл!"]
-# KEYWORDS = ["Dyrachyo"]
+# KEYWORDS = ["Хватай свой пазл!"]
+KEYWORDS = ["Тут пазла нет!"]
+# KEYWORDS = ["стареньким"]
 
 
 def get_response(URL, headers):
@@ -41,7 +46,7 @@ def full_article_by_keywords(url, headers, keywords):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
-    article_body = soup.find("div", class_="tm-article-body")
+    article_body = soup.find("article")
     if not article_body:
         return False
 
@@ -79,7 +84,7 @@ for article in articles:
         print(f"{date} – {title} – {link}")
     # Проверяем ключевые слова по тексту статьи
     elif full_article_by_keywords(link, HEADERS, KEYWORDS):
-        print(f"{date} – {title} – {link}")
+        print(f"Full-{date} – {title} – {link}")
 
 
 # full_article_by_keywords(link, HEADERS, KEYWORDS)
