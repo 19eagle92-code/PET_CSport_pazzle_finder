@@ -11,6 +11,7 @@ options = Options()
 options.add_argument("--headless")
 options.add_argument("--disable-blink-features=AutomationControlled")
 
+
 URL = "https://www.cybersport.ru/tags/dota-2/dyrachyo-posovetoval-novichkam-ne-igrat-v-dota-2"
 HEADERS = {
     "User-Agent": (
@@ -20,22 +21,20 @@ HEADERS = {
     )
 }
 
-driver = webdriver.Chrome(options=options)
-driver.get(URL)
 
-markup = driver.page_source
-soup = BeautifulSoup(markup, "html.parser")
+def web_driver(
+    URL,
+):
 
+    driver = webdriver.Chrome(options=options)
+    driver.get(URL)
 
-elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'Тут пазла нет!')]")
+    markup = driver.page_source
+    soup = BeautifulSoup(markup, "html.parser")
 
-if elements:
-    print("Нашли элемент!")
-    print(elements[0].text)
-else:
-    print("Не найдено")
-
-driver.quit()
+    elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'Тут пазла нет!')]")
+    driver.quit()
+    return elements
 
 
 # time.sleep(10)

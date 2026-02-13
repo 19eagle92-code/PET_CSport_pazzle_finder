@@ -5,7 +5,9 @@ from datetime import datetime
 from rich.progress import track
 from rich import print
 import time
-
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
 URL = "https://www.cybersport.ru"
@@ -20,6 +22,10 @@ HEADERS = {
 # KEYWORDS = ["Хватай свой пазл!"]
 KEYWORDS = ["Тут пазла нет!"]
 # KEYWORDS = ["стареньким"]
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-blink-features=AutomationControlled")
 
 
 def get_response(URL, headers):
@@ -40,6 +46,21 @@ def get_soup(URL, headers):
 
 articles = get_soup(BASE_URL, HEADERS).find_all("article")
 print(len(articles))
+
+
+def web_driver(
+    URL,
+):
+
+    driver = webdriver.Chrome(options=options)
+    driver.get(URL)
+
+    markup = driver.page_source
+    soup = BeautifulSoup(markup, "html.parser")
+
+    elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'Тут пазла нет!')]")
+    driver.quit()
+    return elements
 
 
 def full_article_by_keywords(url, headers, keywords):
