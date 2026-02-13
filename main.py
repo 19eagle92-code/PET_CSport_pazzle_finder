@@ -18,8 +18,8 @@ HEADERS = {
     )
 }
 # KEYWORDS = ["Хватай свой пазл!"]
-# KEYWORDS = ["Тут пазла нет!"]
-KEYWORDS = ["стареньким"]
+KEYWORDS = ["Тут пазла нет!"]
+# KEYWORDS = ["стареньким"]
 
 
 def get_response(URL, headers):
@@ -83,9 +83,13 @@ for article in track(articles, description="Прогресс поиска"):
     # Проверяем ключевые слова по заголовку
     if any(keyword.lower() in preview_text for keyword in KEYWORDS):
         print(f"{date} – {title} – {link}")
+    else:
+        print("Совпадений не найденно")
+
         # Проверяем ключевые слова по тексту статьи
-    elif full_article_by_keywords(link, HEADERS, KEYWORDS):
+    if full_article_by_keywords(link, HEADERS, KEYWORDS):
         print(f"Full-{date} – {title} – {link}")
+
 
 print("\n[bold green]✓ Поиск завершен![/bold green]")
 # if __name__ == "__main__":
