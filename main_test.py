@@ -4,6 +4,12 @@ import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+import time
+
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-blink-features=AutomationControlled")
 
 URL = "https://www.cybersport.ru/tags/dota-2/dyrachyo-posovetoval-novichkam-ne-igrat-v-dota-2"
 HEADERS = {
@@ -13,45 +19,23 @@ HEADERS = {
         "Chrome/120.0.0.0 Safari/537.36"
     )
 }
-# KEYWORDS = ["Хватай свой пазл!"]
-KEYWORDS = ["Тут пазла нет!"]
-# KEYWORDS = ["стареньким"]
+
+driver = webdriver.Chrome(options=options)
+driver.get(URL)
+
+markup = driver.page_source
+soup = BeautifulSoup(markup, "html.parser")
 
 
-def full_article_by_keywords(url, headers, keywords):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
-    article_body = soup.find("article")
-    if not article_body:
-        return False
+elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'Тут пазла нет!')]")
 
-    text = article_body.get_text().lower()
-    return any(keyword.lower() in text for keyword in keywords)
-    # return text
+if elements:
+    print("Нашли элемент!")
+    print(elements[0].text)
+else:
+    print("Не найдено")
+
+driver.quit()
 
 
-with open("try.txt", "w", encoding="utf-8") as f:
-    f.write(full_article_by_keywords(URL, HEADERS, KEYWORDS))
-
-
-def full_article_by_keywords(url, headers, keywords):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
-    # article_body = soup.find("article")
-    # if not article_body:
-    #     return False
-
-    # text = article_body.get_text().lower()
-    # return any(keyword.lower() in text for keyword in keywords)
-    return response.text
-
-
-# with open("links2.csv", "a", encoding="utf-8", newline="") as f:
-#     datawriter = csv.writer(f, delimiter=",")
-#     # Вместо contacts_list подставьте свой список
-#     datawriter.writerows(full_article_by_keywords(URL, HEADERS, KEYWORDS))
-
-with open("try.txt", "w", encoding="utf-8") as f:
-    f.write(full_article_by_keywords(URL, HEADERS, KEYWORDS))
+# time.sleep(10)
