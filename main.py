@@ -62,65 +62,65 @@ articles = get_soup(BASE_URL, HEADERS).find_all("article")
 print(len(articles))
 
 
-# def web_driver(URL):
+def web_driver(URL):
 
-#     driver = webdriver.Chrome(options=options)
-#     driver.get(URL)
+    driver = webdriver.Chrome(options=options)
+    driver.get(URL)
 
-#     markup = driver.page_source
-#     soup = BeautifulSoup(markup, "html.parser")
+    markup = driver.page_source
+    soup = BeautifulSoup(markup, "html.parser")
 
-#     elements = driver.find_elements(
-#         By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
-#     )
-#     driver.quit()
+    elements = driver.find_elements(
+        By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
+    )
+    driver.quit()
 
-#     return elements
-
-
-# def full_article_by_keywords(url, headers, keywords):
-#     response = requests.get(url, headers=headers)
-#     response.raise_for_status()
-#     soup = BeautifulSoup(response.text, "html.parser")
-#     article_body = soup.find("article")
-#     if not article_body:
-#         return False
-
-#     text = article_body.get_text().lower()
-#     return any(keyword.lower() in text for keyword in keywords)
+    return elements
 
 
-# for article in track(articles, description="Прогресс поиска"):
-#     print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
-#     # Ищем заголовок
-#     title_tag = article.find("h3")
-#     # print(title_tag.text)
-#     if not title_tag:
-#         continue
-#     title = title_tag.text.strip()
-#     # print(title)
+def full_article_by_keywords(url, headers, keywords):
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    article_body = soup.find("article")
+    if not article_body:
+        return False
 
-#     # Ищем ссылку
-#     link = article.find("a")["href"]
-#     # print(link)
+    text = article_body.get_text().lower()
+    return any(keyword.lower() in text for keyword in keywords)
 
-#     if link.startswith("/"):
-#         link = URL + link
-#         # print(link)
 
-#     # Ищем дату
-#     date_tag = article.find("time")
-#     date = date_tag["datetime"][:10] if date_tag else "Без даты"
-#     # print(date)
+for article in track(articles, description="Прогресс поиска"):
+    print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
+    # Ищем заголовок
+    title_tag = article.find("h3")
+    # print(title_tag.text)
+    if not title_tag:
+        continue
+    title = title_tag.text.strip()
+    # print(title)
 
-#     #     # Видимый текст статьи
-#     preview_text = article.get_text().lower()
+    # Ищем ссылку
+    link = article.find("a")["href"]
+    # print(link)
 
-#     # Проверяем ключевые слова по заголовку
-#     if web_driver(link):
-#         print(f"{date} – {title} – {link}")
-#     else:
-#         print("Пазла тут нет")
+    if link.startswith("/"):
+        link = URL + link
+        # print(link)
+
+    # Ищем дату
+    date_tag = article.find("time")
+    date = date_tag["datetime"][:10] if date_tag else "Без даты"
+    # print(date)
+
+    #     # Видимый текст статьи
+    preview_text = article.get_text().lower()
+
+    # Проверяем ключевые слова по заголовку
+    if web_driver(link):
+        print(f"{date} – {title} – {link}")
+    else:
+        print("Пазла тут нет")
 
 
 print("\n[bold green]✓ Поиск завершен![/bold green]")
