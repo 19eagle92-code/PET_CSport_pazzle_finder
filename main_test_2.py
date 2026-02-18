@@ -88,7 +88,7 @@ def web_driver(URL):
     elements = driver.find_elements(
         By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
     )
-    driver.quit()
+    # driver.quit()
 
     return elements
 

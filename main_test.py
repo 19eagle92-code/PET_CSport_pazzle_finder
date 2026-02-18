@@ -1,11 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+from datetime import datetime
+from rich.progress import track
+from rich import print
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 
-URL = "https://www.cybersport.ru/tags/dota-2/dyrachyo-posovetoval-novichkam-ne-igrat-v-dota-2"
+# BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
+URL = "https://www.cybersport.ru"
+BASE_URL = "https://www.cybersport.ru/tags/dota-2"
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -13,45 +21,115 @@ HEADERS = {
         "Chrome/120.0.0.0 Safari/537.36"
     )
 }
-# KEYWORDS = ["Хватай свой пазл!"]
-KEYWORDS = ["Тут пазла нет!"]
-# KEYWORDS = ["стареньким"]
 
 
-def full_article_by_keywords(url, headers, keywords):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
-    article_body = soup.find("article")
-    if not article_body:
-        return False
-
-    text = article_body.get_text().lower()
-    return any(keyword.lower() in text for keyword in keywords)
-    # return text
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-blink-features=AutomationControlled")
 
 
-with open("try.txt", "w", encoding="utf-8") as f:
-    f.write(full_article_by_keywords(URL, HEADERS, KEYWORDS))
+driver = webdriver.Chrome(options=options)
+driver.get(BASE_URL)
+# 2026-02-12
+time.sleep(2)
+
+a = "article"
+# button = driver.find_element(By.XPATH, "//button[contains(text(),'Показать еще')]")
 
 
-def full_article_by_keywords(url, headers, keywords):
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, "html.parser")
-    # article_body = soup.find("article")
-    # if not article_body:
-    #     return False
-
-    # text = article_body.get_text().lower()
-    # return any(keyword.lower() in text for keyword in keywords)
-    return response.text
+def article_finder(n):
+    """Функция парсинга элементов на сайте (статей)"""
+    markup = driver.page_source
+    soup = BeautifulSoup(markup, "html.parser")
+    articles = soup.find_all(n)
+    return articles
 
 
-# with open("links2.csv", "a", encoding="utf-8", newline="") as f:
-#     datawriter = csv.writer(f, delimiter=",")
-#     # Вместо contacts_list подставьте свой список
-#     datawriter.writerows(full_article_by_keywords(URL, HEADERS, KEYWORDS))
+def button_check():
+    try:
+        time.sleep(2)
+        button = driver.find_element(
+            By.XPATH, "//button[contains(text(),'Показать еще')]"
+        )
+        if button:
+            print(f"Найдена кнопока")
+            actions = ActionChains(driver)
+            actions.move_to_element(button).perform()
+            time.sleep(1)
+            try:
+                button.click()
+                time.sleep(2)
+                return "Кнопка просто нажата"
 
-with open("try.txt", "w", encoding="utf-8") as f:
-    f.write(full_article_by_keywords(URL, HEADERS, KEYWORDS))
+            except:
+                # Если обычный клик не работает, пробуем JavaScript клик
+                driver.execute_script("arguments[0].click();", button)
+                time.sleep(2)
+                return "Кнопка нажата через JavaScript"
+        else:
+            # Если кнопка не найдена пролистываем до конца страницы
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            return "Кнопки нет, пролистываем до конца"
+    except Exception as e:
+        return f"Ошибка при клике: {e}"
+
+
+def web_driver(URL):
+
+    driver = webdriver.Chrome(options=options)
+    driver.get(URL)
+    time.sleep(2)
+
+    markup = driver.page_source
+    soup = BeautifulSoup(markup, "html.parser")
+
+    elements = driver.find_elements(
+        By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
+    )
+    # driver.quit()
+
+    return elements
+
+
+def articl_data(n):
+    for article in track(article_finder(n), description="Прогресс поиска"):
+        print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
+        # Ищем заголовок
+        title_tag = article.find("h3")
+        # print(title_tag.text)
+        if not title_tag:
+            continue
+        title = title_tag.text.strip()
+        # print(title)
+
+        # Ищем ссылку
+        link = article.find("a")["href"]
+        # print(link)
+
+        if link.startswith("/"):
+            link = URL + link
+            # print(link)
+
+        # Ищем дату
+        date_tag = article.find("time")
+        date = date_tag["datetime"][:10] if date_tag else "Без даты"
+        # print(date)
+        if web_driver(link):
+            print(f"{date} – {title} – {link}")
+            with open("try_2.txt", "a", encoding="utf-8") as f:
+                f.write(f"{date} – {title} – {link}\n")
+        else:
+            print("Пазла тут нет")
+
+    print("\n[bold green]✓ Поиск завершен![/bold green]")
+    return
+
+
+while len(article_finder(a)) <= 200:
+    button_check()
+    print(len(article_finder(a)))
+    if len(article_finder(a)) == 50:
+        print("цикл завершен")
+        articl_data(a)
