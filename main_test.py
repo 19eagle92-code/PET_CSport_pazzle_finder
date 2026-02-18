@@ -58,34 +58,31 @@ def get_articles(driver):
 
 
 def button_check(driver):
-    try:
-        button = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//button[contains(text(), 'Показать еще')]")
-            )
+    """Функция проверки существования кнопки"""
+    button = WebDriverWait(driver, 5).until(
+        EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(text(), 'Показать еще')]")
         )
-        if button:
-            print(f"Найдена кнопока")
-            actions = ActionChains(driver)
-            actions.move_to_element(button).perform()
-            time.sleep(1)
-            try:
-                button.click()
-                time.sleep(2)
-                return "Кнопка просто нажата"
+    )
+    return button
 
-            except:
-                # Если обычный клик не работает, пробуем JavaScript клик
-                driver.execute_script("arguments[0].click();", button)
-                time.sleep(2)
-                return "Кнопка нажата через JavaScript"
-        else:
-            # Если кнопка не найдена пролистываем до конца страницы
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)
-            return "Кнопки нет, пролистываем до конца"
-    except Exception as e:
-        return f"Ошибка при клике: {e}"
+
+def button_push(driver, button):
+    """Функция нажатия кнопки"""
+    try:
+        actions = ActionChains(driver)
+        actions.move_to_element(button).perform()
+        button.click()
+
+    except:
+        # Если обычный клик не работает, пробуем JavaScript клик
+        driver.execute_script("arguments[0].click();", button)
+
+
+def scroll(driver):
+    """Функция прокрутки страницы"""
+    # Если кнопка не найдена пролистываем до конца страницы
+    return driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
 
 # def articl_data(n):
