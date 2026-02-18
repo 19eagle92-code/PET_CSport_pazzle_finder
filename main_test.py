@@ -62,12 +62,15 @@ def get_articles(driver):
 
 def button_check(driver):
     """Функция проверки существования кнопки"""
-    button = WebDriverWait(driver, 5).until(
+    try:
+        WebDriverWait(driver, 5).until(
         EC.presence_of_element_located(
             (By.XPATH, "//button[contains(text(), 'Показать еще')]")
         )
     )
-    return button
+        return True
+    except:
+        return False
 
 
 def button_push(driver, button):
@@ -97,6 +100,19 @@ def get_last_article_date(driver):
     date_str = time_tag.get_attribute("datetime")[:10]
 
     return datetime.strptime(date_str, "%Y-%m-%d")
+
+def load_more(driver):
+    """Функция подгрузки статей """
+    old_article_count = len(get_articles(driver))
+
+    if 
+
+
+
+    WebDriverWait(driver, 10).until(
+        lambda d: len(get_articles(d)) > old_article_count
+    )
+
 
 
 # def articl_data(n):
