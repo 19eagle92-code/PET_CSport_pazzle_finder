@@ -16,13 +16,6 @@ from selenium.webdriver.support import expected_conditions as EC
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
 URL = "https://www.cybersport.ru"
 BASE_URL = "https://www.cybersport.ru/tags/dota-2"
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 # 2026-02-12
 
@@ -82,17 +75,28 @@ def button_push(driver, button):
     try:
         actions = ActionChains(driver)
         actions.move_to_element(button).perform()
-        button.click()
+        return button.click()
 
     except:
         # Если обычный клик не работает, пробуем JavaScript клик
-        driver.execute_script("arguments[0].click();", button)
+        return driver.execute_script("arguments[0].click();", button)
 
 
 def scroll(driver):
     """Функция прокрутки страницы"""
     # Если кнопка не найдена пролистываем до конца страницы
     return driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+
+def get_last_article_date(driver):
+    """Функция полученпия даты последней статьи"""
+    articles = get_articles(driver)
+    last_article = articles[-1]
+
+    time_tag = last_article.find_element(By.TAG_NAME, "time")
+    date_str = time_tag.get_attribute("datetime")[:10]
+
+    return datetime.strptime(date_str, "%Y-%m-%d")
 
 
 # def articl_data(n):
