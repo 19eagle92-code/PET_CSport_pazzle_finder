@@ -24,6 +24,8 @@ HEADERS = {
     )
 }
 
+# 2026-02-12
+
 
 def create_driver():
     """Функция создающая driver"""
@@ -37,7 +39,7 @@ def create_driver():
     return driver
 
 
-def has_puzzle(driver):
+def puzzle_check(driver):
     """Функция проверки наличия пазла"""
     try:
         element = WebDriverWait(driver, 5).until(
@@ -50,34 +52,17 @@ def has_puzzle(driver):
         return False
 
 
-options = Options()
-options.add_argument("--headless")
-options.add_argument("--window-size=1920,1080")
-options.add_argument("--disable-blink-features=AutomationControlled")
+def get_articles(driver):
+    """Функция получения статей"""
+    return driver.find_elements(By.TAG_NAME, "article")
 
 
-driver = webdriver.Chrome(options=options)
-driver.get(BASE_URL)
-# 2026-02-12
-time.sleep(2)
-
-a = "article"
-# button = driver.find_element(By.XPATH, "//button[contains(text(),'Показать еще')]")
-
-
-def article_finder(n):
-    """Функция парсинга элементов на сайте (статей)"""
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
-    articles = soup.find_all(n)
-    return articles
-
-
-def button_check():
+def button_check(driver):
     try:
-        time.sleep(2)
-        button = driver.find_element(
-            By.XPATH, "//button[contains(text(),'Показать еще')]"
+        button = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[contains(text(), 'Показать еще')]")
+            )
         )
         if button:
             print(f"Найдена кнопока")
@@ -103,60 +88,35 @@ def button_check():
         return f"Ошибка при клике: {e}"
 
 
-def web_driver(URL):
+# def articl_data(n):
+#     for article in track(article_finder(n), description="Прогресс поиска"):
+#         print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
+#         # Ищем заголовок
+#         title_tag = article.find("h3")
+#         # print(title_tag.text)
+#         if not title_tag:
+#             continue
+#         title = title_tag.text.strip()
+#         # print(title)
 
-    driver = webdriver.Chrome(options=options)
-    driver.get(URL)
-    time.sleep(2)
+#         # Ищем ссылку
+#         link = article.find("a")["href"]
+#         # print(link)
 
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
+#         if link.startswith("/"):
+#             link = URL + link
+#             # print(link)
 
-    elements = driver.find_elements(
-        By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
-    )
-    # driver.quit()
+#         # Ищем дату
+#         date_tag = article.find("time")
+#         date = date_tag["datetime"][:10] if date_tag else "Без даты"
+#         # print(date)
+#         if web_driver(link):
+#             print(f"{date} – {title} – {link}")
+#             with open("try_2.txt", "a", encoding="utf-8") as f:
+#                 f.write(f"{date} – {title} – {link}\n")
+#         else:
+#             print("Пазла тут нет")
 
-    return elements
-
-
-def articl_data(n):
-    for article in track(article_finder(n), description="Прогресс поиска"):
-        print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
-        # Ищем заголовок
-        title_tag = article.find("h3")
-        # print(title_tag.text)
-        if not title_tag:
-            continue
-        title = title_tag.text.strip()
-        # print(title)
-
-        # Ищем ссылку
-        link = article.find("a")["href"]
-        # print(link)
-
-        if link.startswith("/"):
-            link = URL + link
-            # print(link)
-
-        # Ищем дату
-        date_tag = article.find("time")
-        date = date_tag["datetime"][:10] if date_tag else "Без даты"
-        # print(date)
-        if web_driver(link):
-            print(f"{date} – {title} – {link}")
-            with open("try_2.txt", "a", encoding="utf-8") as f:
-                f.write(f"{date} – {title} – {link}\n")
-        else:
-            print("Пазла тут нет")
-
-    print("\n[bold green]✓ Поиск завершен![/bold green]")
-    return
-
-
-while len(article_finder(a)) <= 200:
-    button_check()
-    print(len(article_finder(a)))
-    if len(article_finder(a)) == 50:
-        print("цикл завершен")
-        articl_data(a)
+#     print("\n[bold green]✓ Поиск завершен![/bold green]")
+#     return
