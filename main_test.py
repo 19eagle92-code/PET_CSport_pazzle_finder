@@ -63,26 +63,36 @@ def get_articles(driver):
 def button_check(driver):
     """Функция проверки существования кнопки"""
     try:
-        WebDriverWait(driver, 5).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "//button[contains(text(), 'Показать еще')]")
+        return WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[contains(text(), 'Показать еще')]")
+            )
         )
-    )
-        return True
     except:
+        return None
+
+
+def button_push(driver):
+    """Функция нажатия кнопки"""
+
+    button = button_check(driver)
+    if button is None:
         return False
 
-
-def button_push(driver, button):
-    """Функция нажатия кнопки"""
     try:
+
         actions = ActionChains(driver)
         actions.move_to_element(button).perform()
-        return button.click()
+        button.click()
+        return True
 
     except:
-        # Если обычный клик не работает, пробуем JavaScript клик
-        return driver.execute_script("arguments[0].click();", button)
+        try:
+            # Если обычный клик не работает, пробуем JavaScript клик
+            driver.execute_script("arguments[0].click();", button)
+            return True
+        except:
+            return False
 
 
 def scroll(driver):
@@ -101,18 +111,17 @@ def get_last_article_date(driver):
 
     return datetime.strptime(date_str, "%Y-%m-%d")
 
+
 def load_more(driver):
-    """Функция подгрузки статей """
+    """Функция подгрузки статей"""
     old_article_count = len(get_articles(driver))
 
-    if 
+    if button_check(driver) is not None:
+        button_push(driver)
+    else:
+        scroll(driver)
 
-
-
-    WebDriverWait(driver, 10).until(
-        lambda d: len(get_articles(d)) > old_article_count
-    )
-
+    WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
 
 
 # def articl_data(n):
