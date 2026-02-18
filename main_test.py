@@ -10,6 +10,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
 URL = "https://www.cybersport.ru"
@@ -21,6 +23,18 @@ HEADERS = {
         "Chrome/120.0.0.0 Safari/537.36"
     )
 }
+
+
+def create_driver():
+    """Функция создающая driver"""
+    options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+
+    driver = webdriver.Chrome(options=options)
+    driver.set_page_load_timeout(20)
+    return driver
 
 
 options = Options()
