@@ -112,6 +112,33 @@ def get_last_article_date(driver):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 
+def get_article_title(driver):
+    """Функция получения заголовка статьи"""
+    articles = get_articles(driver)
+    title_tag = articles.find_element(By.TAG_NAME, "h3")
+    return title_tag.text.strip()
+
+
+def get_article_date(driver):
+    """Функция получения даты статьи"""
+    articles = get_articles(driver)
+    time_tag = articles.find_element(By.TAG_NAME, "time")
+    date_str = time_tag.get_attribute("datetime")[:10]
+
+    return datetime.strptime(date_str, "%Y-%m-%d")
+
+
+def get_article_link(driver):
+    """Функция получения link (ссылки) статьи"""
+    articles = get_articles(driver)
+    link_tag = articles.find_element(By.TAG_NAME, "a")
+    href = link_tag.get_attribute("href")
+    if href.startswith("/"):
+        link = URL + href
+
+    return link
+
+
 def load_more(driver):
     """Функция подгрузки статей"""
     old_article_count = len(get_articles(driver))
