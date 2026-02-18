@@ -39,6 +39,16 @@ def create_driver():
     return driver
 
 
+def open_site(driver, URL):
+    """Функция открывающая сайт"""
+    return driver.get(URL)
+
+
+def close_browser(driver):
+    """Функция закрывающая браузер"""
+    return driver.quit()
+
+
 def puzzle_check(driver):
     """Функция проверки наличия пазла"""
     try:
