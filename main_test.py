@@ -37,6 +37,19 @@ def create_driver():
     return driver
 
 
+def has_puzzle(driver):
+    """Функция проверки наличия пазла"""
+    try:
+        element = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//span[contains(text(), 'пазл')]")
+            )
+        )
+        return "Хватай свой пазл" in element.text
+    except:
+        return False
+
+
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--window-size=1920,1080")
