@@ -93,35 +93,6 @@ def web_driver(URL):
     return elements
 
 
-# def articl_data(n):
-#     for article in article_finder(n):
-#         # Ищем заголовок
-#         title_tag = article.find("h3")
-#         # print(title_tag.text)
-#         if not title_tag:
-#             continue
-#         title = title_tag.text.strip()
-#         # print(title)
-
-#         # Ищем ссылку
-#         link = article.find("a")["href"]
-#         # print(link)
-
-#         if link.startswith("/"):
-#             link = URL + link
-#             # print(link)
-
-#         # Ищем дату
-#         date_tag = article.find("time")
-#         date = date_tag["datetime"][:10] if date_tag else "Без даты"
-#         # print(date)
-#         if web_driver(link):
-#             print(f"{date} – {title} – {link}")
-#         else:
-#             print("Пазла тут нет")
-#     return title, link, date
-
-
 def articl_data(n):
     for article in track(article_finder(n), description="Прогресс поиска"):
         print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
@@ -156,21 +127,9 @@ def articl_data(n):
     return
 
 
-# button_check()
-
-# print(len(article_finder(a)))
-# print("2я проходка:")
-# button_check()
-
-# print(len(article_finder(a)))
-# print("3я проходка:")
-# button_check()
-
-# print(len(article_finder(a)))
-# articl_data(a)
 while len(article_finder(a)) <= 200:
     button_check()
     print(len(article_finder(a)))
-    if len(article_finder(a)) == 200:
+    if len(article_finder(a)) == 50:
         print("цикл завершен")
         articl_data(a)
