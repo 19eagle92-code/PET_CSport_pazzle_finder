@@ -12,6 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import sqlite3
 
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
 URL = "https://www.cybersport.ru"
@@ -20,10 +21,30 @@ BASE_URL = "https://www.cybersport.ru/tags/dota-2"
 # 2026-02-12
 
 
+def init_db():
+    """Функцуия создания таблицы ДБ"""
+    conn = sqlite3.connect("articles.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS articles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE,
+            date TEXT,
+            has_puzzle INTEGER
+        )
+    """
+    )
+
+    conn.commit()
+    return conn
+
+
 def create_driver():
     """Функция создающая driver"""
     options = Options()
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-blink-features=AutomationControlled")
 
@@ -151,35 +172,26 @@ def load_more(driver):
     WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
 
 
-# def articl_data(n):
-#     for article in track(article_finder(n), description="Прогресс поиска"):
-#         print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
-#         # Ищем заголовок
-#         title_tag = article.find("h3")
-#         # print(title_tag.text)
-#         if not title_tag:
-#             continue
-#         title = title_tag.text.strip()
-#         # print(title)
+while True:
+    driver = create_driver()
+    open_site(driver, URL)
+    articles = get_articles(driver)
+    last_date = get_last_article_date(driver)
+    target_date_str = "2026-02-09"
 
-#         # Ищем ссылку
-#         link = article.find("a")["href"]
-#         # print(link)
+    if last_date <= datetime.strptime(target_date_str, "%Y-%m-%d"):
+        break
 
-#         if link.startswith("/"):
-#             link = URL + link
-#             # print(link)
+    old_article_count = len(articles)
 
-#         # Ищем дату
-#         date_tag = article.find("time")
-#         date = date_tag["datetime"][:10] if date_tag else "Без даты"
-#         # print(date)
-#         if web_driver(link):
-#             print(f"{date} – {title} – {link}")
-#             with open("try_2.txt", "a", encoding="utf-8") as f:
-#                 f.write(f"{date} – {title} – {link}\n")
-#         else:
-#             print("Пазла тут нет")
+    if button_check(driver):
+        button_push(driver)
+    else:
+        scroll(driver)
 
-#     print("\n[bold green]✓ Поиск завершен![/bold green]")
-#     return
+    WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
+
+    if lambda d: len(get_articles(d)) == old_article_count:
+        print("Статьи закончились")
+        break
+close_browser(driver)
