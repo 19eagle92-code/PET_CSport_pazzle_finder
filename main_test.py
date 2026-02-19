@@ -146,26 +146,22 @@ def get_last_article_date(driver):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 
-def get_article_title(driver):
+def get_article_title(article):
     """Функция получения заголовка статьи"""
-    articles = get_articles(driver)
-    title_tag = articles.find_element(By.TAG_NAME, "h3")
-    return title_tag.text.strip()
+    return article.find_element(By.TAG_NAME, "h3").text.strip()
 
 
-def get_article_date(driver):
+def get_article_date(article):
     """Функция получения даты статьи"""
-    articles = get_articles(driver)
-    time_tag = articles.find_element(By.TAG_NAME, "time")
+    time_tag = article.find_element(By.TAG_NAME, "time")
     date_str = time_tag.get_attribute("datetime")[:10]
 
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 
-def get_article_link(driver):
+def get_article_link(article):
     """Функция получения link (ссылки) статьи"""
-    articles = get_articles(driver)
-    link_tag = articles.find_element(By.TAG_NAME, "a")
+    link_tag = article.find_element(By.TAG_NAME, "a")
     href = link_tag.get_attribute("href")
     if href.startswith("/"):
         link = URL + href
@@ -185,26 +181,34 @@ def load_more(driver):
     WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
 
 
+driver = create_driver()
+open_site(driver, BASE_URL)
+
 while True:
-    driver = create_driver()
-    open_site(driver, URL)
+
     articles = get_articles(driver)
     last_date = get_last_article_date(driver)
     target_date_str = "2026-02-09"
 
     if last_date <= datetime.strptime(target_date_str, "%Y-%m-%d"):
+        print("Достигнута целевая дата")
         break
 
     old_article_count = len(articles)
 
-    if button_check(driver):
+    button = button_check(driver)
+
+    if button:
         button_push(driver)
     else:
         scroll(driver)
 
     WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
 
-    if lambda d: len(get_articles(d)) == old_article_count:
+    new_count = len(get_articles(driver))
+
+    if new_count == old_article_count:
         print("Статьи закончились")
         break
+
 close_browser(driver)
