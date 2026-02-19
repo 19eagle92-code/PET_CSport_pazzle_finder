@@ -41,6 +41,19 @@ def init_db():
     return conn
 
 
+def save_article(conn, url, date, has_puzzle):
+    """Функция сохранения статей в ДБ"""
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO articles (url, date, has_puzzle)
+        VALUES (?, ?, ?)
+    """,
+        (url, date, int(has_puzzle)),
+    )
+
+
 def create_driver():
     """Функция создающая driver"""
     options = Options()
