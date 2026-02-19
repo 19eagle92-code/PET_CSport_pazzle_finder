@@ -76,16 +76,12 @@ def close_browser(driver):
     return driver.quit()
 
 
-def puzzle_check(driver):
+def puzzle_check(article):
     """Функция проверки наличия пазла"""
     try:
-        element = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//span[contains(text(), 'пазл')]")
-            )
-        )
-        return "Хватай свой пазл" in element.text
-    except:
+        article.find_element(By.XPATH, ".//span[contains(text(), 'пазл')]")
+        return True
+    except NoSuchElementException:
         return False
 
 
@@ -135,9 +131,9 @@ def scroll(driver):
     return driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
 
-def get_last_article_date(driver):
+def get_last_article_date(articles):
     """Функция полученпия даты последней статьи"""
-    articles = get_articles(driver)
+
     last_article = articles[-1]
 
     time_tag = last_article.find_element(By.TAG_NAME, "time")
@@ -165,8 +161,9 @@ def get_article_link(article):
     href = link_tag.get_attribute("href")
     if href.startswith("/"):
         link = URL + href
-
-    return link
+        return link
+    else:
+        return URL + "/" + href
 
 
 def load_more(driver):
@@ -181,29 +178,46 @@ def load_more(driver):
     WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
 
 
+target_date_str = "2026-02-09"
 driver = create_driver()
 open_site(driver, BASE_URL)
 
 while True:
 
     articles = get_articles(driver)
-    last_date = get_last_article_date(driver)
-    target_date_str = "2026-02-09"
+
+    last_date = get_last_article_date(articles)
 
     if last_date <= datetime.strptime(target_date_str, "%Y-%m-%d"):
         print("Достигнута целевая дата")
         break
 
+    for article in articles:
+
+        puzzle = puzzle_check(article)
+
+        if puzzle:
+            title = get_article_title(article)
+            date = get_article_date(article)
+            link = get_article_link(article)
+            print(f"{date}--{title}--{link}")
+        else:
+            continue
+
     old_article_count = len(articles)
 
-    button = button_check(driver)
-
-    if button:
-        button_push(driver)
-    else:
-        scroll(driver)
-
-    WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
+    try:
+        button = button_check(driver)
+        if button:
+            button_push(driver)
+        else:
+            scroll(driver)
+        WebDriverWait(driver, 10).until(
+            lambda d: len(get_articles(d)) > old_article_count
+        )
+    except:
+        print("Новые статьи не загрузились")
+        break
 
     new_count = len(get_articles(driver))
 
