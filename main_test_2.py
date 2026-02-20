@@ -10,126 +10,59 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-# BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
+
 URL = "https://www.cybersport.ru"
-BASE_URL = "https://www.cybersport.ru/tags/dota-2"
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 
 options = Options()
-options.add_argument("--headless")
+# options.add_argument("--headless")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-blink-features=AutomationControlled")
 
 
 driver = webdriver.Chrome(options=options)
-driver.get(BASE_URL)
-# 2026-02-12
-time.sleep(2)
-
-a = "article"
-# button = driver.find_element(By.XPATH, "//button[contains(text(),'Показать еще')]")
+driver.get(URL)
 
 
-def article_finder(n):
-    """Функция парсинга элементов на сайте (статей)"""
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
-    articles = soup.find_all(n)
-    return articles
-
-
-def button_check():
+def puzzle_check(driver):
+    """Функция проверки наличия пазла"""
     try:
-        time.sleep(2)
-        button = driver.find_element(
-            By.XPATH, "//button[contains(text(),'Показать еще')]"
+        driver.find_element(By.XPATH, "//span[contains(text(), 'Хватай свой пазл!')]")
+        return True
+    except NoSuchElementException:
+        return False
+
+
+# link = URL + "/tags/dota-2/korb3n-o-team-spirit-spad-yeto-normalno-byvayet"
+link = (
+    URL
+    + "/tags/dota-2/kiritych-o-betboom-team-my-gotovy-rugat-sya-drug-s-drugom-chtoby-stat-luchshe-no"
+)
+
+driver.execute_script("window.open(arguments[0]);", link)
+driver.switch_to.window(driver.window_handles[1])
+
+
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located(
+        (
+            By.XPATH,
+            "//span[contains(text(),'Хватай свой пазл!') or contains(text(), 'Тут пазла нет!') or contains(text(), 'Этот пазл уже твой!')]",
         )
-        if button:
-            print(f"Найдена кнопока")
-            actions = ActionChains(driver)
-            actions.move_to_element(button).perform()
-            time.sleep(1)
-            try:
-                button.click()
-                time.sleep(2)
-                return "Кнопка просто нажата"
-
-            except:
-                # Если обычный клик не работает, пробуем JavaScript клик
-                driver.execute_script("arguments[0].click();", button)
-                time.sleep(2)
-                return "Кнопка нажата через JavaScript"
-        else:
-            # Если кнопка не найдена пролистываем до конца страницы
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)
-            return "Кнопки нет, пролистываем до конца"
-    except Exception as e:
-        return f"Ошибка при клике: {e}"
-
-
-def web_driver(URL):
-
-    driver = webdriver.Chrome(options=options)
-    driver.get(URL)
-    time.sleep(2)
-
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
-
-    elements = driver.find_elements(
-        By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
     )
-    # driver.quit()
-
-    return elements
+)
 
 
-def articl_data(n):
-    for article in track(article_finder(n), description="Прогресс поиска"):
-        print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
-        # Ищем заголовок
-        title_tag = article.find("h3")
-        # print(title_tag.text)
-        if not title_tag:
-            continue
-        title = title_tag.text.strip()
-        # print(title)
+if puzzle_check(driver):
+    print("Пазл найден")
+else:
+    print("Пазл не найден")
 
-        # Ищем ссылку
-        link = article.find("a")["href"]
-        # print(link)
+driver.close()
+driver.switch_to.window(driver.window_handles[0])
 
-        if link.startswith("/"):
-            link = URL + link
-            # print(link)
-
-        # Ищем дату
-        date_tag = article.find("time")
-        date = date_tag["datetime"][:10] if date_tag else "Без даты"
-        # print(date)
-        if web_driver(link):
-            print(f"{date} – {title} – {link}")
-            with open("try_2.txt", "a", encoding="utf-8") as f:
-                f.write(f"{date} – {title} – {link}\n")
-        else:
-            print("Пазла тут нет")
-
-    print("\n[bold green]✓ Поиск завершен![/bold green]")
-    return
-
-
-while len(article_finder(a)) <= 200:
-    button_check()
-    print(len(article_finder(a)))
-    if len(article_finder(a)) == 50:
-        print("цикл завершен")
-        articl_data(a)
+driver.quit()
+exit()

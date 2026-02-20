@@ -76,14 +76,13 @@ def button_check():
         return f"Ошибка при клике: {e}"
 
 
-def web_driver(URL):
+def web_driver(URL, driver):
 
-    driver = webdriver.Chrome(options=options)
     driver.get(URL)
     time.sleep(2)
 
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
+    # markup = driver.page_source
+    # soup = BeautifulSoup(markup, "html.parser")
 
     elements = driver.find_elements(
         By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
@@ -116,7 +115,7 @@ def articl_data(n):
         date_tag = article.find("time")
         date = date_tag["datetime"][:10] if date_tag else "Без даты"
         # print(date)
-        if web_driver(link):
+        if web_driver(link, driver):
             print(f"{date} – {title} – {link}")
             with open("try_2.txt", "a", encoding="utf-8") as f:
                 f.write(f"{date} – {title} – {link}\n")

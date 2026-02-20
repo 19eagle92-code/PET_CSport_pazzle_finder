@@ -77,9 +77,9 @@ def close_browser(driver):
 
 
 def puzzle_check(article):
-    """Функция проверки наличия пазла"""
+    """Функция проверки наличия пазла по фразе"""
     try:
-        article.find_element(By.XPATH, ".//span[contains(text(), 'пазл')]")
+        driver.find_element(By.XPATH, "//span[contains(text(), 'Хватай свой пазл!')]")
         return True
     except NoSuchElementException:
         return False
@@ -159,9 +159,10 @@ def get_article_link(article):
     """Функция получения link (ссылки) статьи"""
     link_tag = article.find_element(By.TAG_NAME, "a")
     href = link_tag.get_attribute("href")
-    if href.startswith("/"):
-        link = URL + href
-        return link
+    if href.startswith("http"):
+        return href
+    elif href.startswith("/"):
+        return URL + href
     else:
         return URL + "/" + href
 
@@ -179,50 +180,61 @@ def load_more(driver):
 
 
 target_date_str = "2026-02-09"
+target_date = datetime.strptime(target_date_str, "%Y-%m-%d")
 driver = create_driver()
-open_site(driver, BASE_URL)
+try:
+    open_site(driver, BASE_URL)
+except Exception as e:
+    print("Ошибка - {e}")
+
+# seen_links = set()
+processed_count = 0
 
 while True:
 
     articles = get_articles(driver)
 
+    if not articles:
+        break
+
+    new_articles = articles[processed_count:]
+
     last_date = get_last_article_date(articles)
 
-    if last_date <= datetime.strptime(target_date_str, "%Y-%m-%d"):
-        print("Достигнута целевая дата")
-        break
+    for article in new_articles:
+        link = get_article_link(article)
+        print(link)
+        article_date = get_article_date(article)
 
-    for article in articles:
+        if last_date <= target_date:
+            print("Достигнута целевая дата")
+            close_browser(driver)
+            exit()
 
-        puzzle = puzzle_check(article)
-
-        if puzzle:
+        driver.execute_script("window.open(arguments[0]);", link)
+        driver.switch_to.window(driver.window_handles[1])
+        if puzzle_check(article):
             title = get_article_title(article)
-            date = get_article_date(article)
-            link = get_article_link(article)
-            print(f"{date}--{title}--{link}")
+            print(f"{article_date}--{title}--{link }")
         else:
-            continue
+            print("Здесь пазла нет")
 
-    old_article_count = len(articles)
+        driver.close()
+        driver.switch_to.window(driver.window_handles[0])
 
-    try:
-        button = button_check(driver)
-        if button:
-            button_push(driver)
-        else:
-            scroll(driver)
-        WebDriverWait(driver, 10).until(
-            lambda d: len(get_articles(d)) > old_article_count
-        )
-    except:
-        print("Новые статьи не загрузились")
-        break
+        # if link in seen_links:
+        #     continue
 
+        # seen_links.add(link)
+
+    processed_count = len(articles)
+
+    load_more(driver)
     new_count = len(get_articles(driver))
 
-    if new_count == old_article_count:
+    if new_count == processed_count:
         print("Статьи закончились")
         break
 
 close_browser(driver)
+exit()
