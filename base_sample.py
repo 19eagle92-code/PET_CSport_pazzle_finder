@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sqlite3
 
-# BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
+
 URL = "https://www.cybersport.ru"
 BASE_URL = "https://www.cybersport.ru/tags/dota-2"
 
