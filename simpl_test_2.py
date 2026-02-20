@@ -36,11 +36,11 @@ def puzzle_check(driver):
         return False
 
 
-# link = URL + "/tags/dota-2/korb3n-o-team-spirit-spad-yeto-normalno-byvayet"
-link = (
-    URL
-    + "/tags/dota-2/kiritych-o-betboom-team-my-gotovy-rugat-sya-drug-s-drugom-chtoby-stat-luchshe-no"
-)
+link = URL + "/tags/dota-2/korb3n-o-team-spirit-spad-yeto-normalno-byvayet"
+# link = (
+#     URL
+#     + "/tags/dota-2/kiritych-o-betboom-team-my-gotovy-rugat-sya-drug-s-drugom-chtoby-stat-luchshe-no"
+# )
 
 driver.execute_script("window.open(arguments[0]);", link)
 driver.switch_to.window(driver.window_handles[1])

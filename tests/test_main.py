@@ -1,6 +1,6 @@
 import requests
 import pytest
-from main import get_response
+from simpl_code import get_response
 
 BASE_URL = "https://www.cybersport.ru/tags/dota-2"
 

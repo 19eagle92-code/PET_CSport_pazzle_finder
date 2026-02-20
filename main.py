@@ -10,125 +10,273 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import sqlite3
 
 # BASE_URL = "https://www.cybersport.ru/tags/dota-2?sort=-publishedAt"
 URL = "https://www.cybersport.ru"
 BASE_URL = "https://www.cybersport.ru/tags/dota-2"
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
-
-options = Options()
-options.add_argument("--headless")
-options.add_argument("--window-size=1920,1080")
-options.add_argument("--disable-blink-features=AutomationControlled")
-
-
-driver = webdriver.Chrome(options=options)
-driver.get(BASE_URL)
 # 2026-02-12
-time.sleep(2)
-
-a = "article"
-# button = driver.find_element(By.XPATH, "//button[contains(text(),'Показать еще')]")
 
 
-def article_finder(n):
-    """Функция парсинга элементов на сайте (статей)"""
-    markup = driver.page_source
-    soup = BeautifulSoup(markup, "html.parser")
-    articles = soup.find_all(n)
-    return articles
+def init_db():
+    """Функцуия создания таблицы ДБ"""
+    conn = sqlite3.connect("articles.db")
+    cursor = conn.cursor()
 
-
-def button_check():
-    try:
-        time.sleep(2)
-        button = driver.find_element(
-            By.XPATH, "//button[contains(text(),'Показать еще')]"
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS articles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE,
+            date TEXT,
+            has_puzzle INTEGER
         )
-        if button:
-            print(f"Найдена кнопока")
-            actions = ActionChains(driver)
-            actions.move_to_element(button).perform()
-            time.sleep(1)
-            try:
-                button.click()
-                time.sleep(2)
-                return "Кнопка просто нажата"
-
-            except:
-                # Если обычный клик не работает, пробуем JavaScript клик
-                driver.execute_script("arguments[0].click();", button)
-                time.sleep(2)
-                return "Кнопка нажата через JavaScript"
-        else:
-            # Если кнопка не найдена пролистываем до конца страницы
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)
-            return "Кнопки нет, пролистываем до конца"
-    except Exception as e:
-        return f"Ошибка при клике: {e}"
-
-
-def web_driver(URL, driver):
-
-    driver.get(URL)
-    time.sleep(2)
-
-    # markup = driver.page_source
-    # soup = BeautifulSoup(markup, "html.parser")
-
-    elements = driver.find_elements(
-        By.XPATH, "//*[contains(text(), 'Хватай свой пазл!')]"
+    """
     )
-    # driver.quit()
 
-    return elements
+    conn.commit()
+    return conn
 
 
-def articl_data(n):
-    for article in track(article_finder(n), description="Прогресс поиска"):
-        print("\n[bold magenta]Поиск по сайтам:[/bold magenta]")
-        # Ищем заголовок
-        title_tag = article.find("h3")
-        # print(title_tag.text)
-        if not title_tag:
-            continue
-        title = title_tag.text.strip()
-        # print(title)
+def save_article(conn, url, date, has_puzzle):
+    """Функция сохранения статей в ДБ"""
+    cursor = conn.cursor()
 
-        # Ищем ссылку
-        link = article.find("a")["href"]
-        # print(link)
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO articles (url, date, has_puzzle)
+        VALUES (?, ?, ?)
+    """,
+        (url, date, int(has_puzzle)),
+    )
 
-        if link.startswith("/"):
-            link = URL + link
+
+def create_driver():
+    """Функция создающая driver"""
+    options = Options()
+    # options.add_argument("--headless=new")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+
+    driver = webdriver.Chrome(options=options)
+    driver.set_page_load_timeout(20)
+    return driver
+
+
+def open_site(driver, URL):
+    """Функция открывающая сайт"""
+    return driver.get(URL)
+
+
+def close_browser(driver):
+    """Функция закрывающая браузер"""
+    return driver.quit()
+
+
+def puzzle_check(driver):
+    """Функция проверки наличия пазла по фразе"""
+    try:
+        driver.find_element(By.XPATH, "//span[contains(text(), 'Хватай свой пазл!')]")
+        return True
+    except NoSuchElementException:
+        return False
+
+
+def get_articles(driver):
+    """Функция получения статей"""
+    return driver.find_elements(By.TAG_NAME, "article")
+
+
+def button_check(driver):
+    """Функция проверки существования кнопки"""
+    try:
+        return WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//button[contains(text(), 'Показать еще')]")
+            )
+        )
+    except:
+        return None
+
+
+def button_push(driver):
+    """Функция нажатия кнопки"""
+
+    button = button_check(driver)
+    if button is None:
+        return False
+
+    try:
+
+        actions = ActionChains(driver)
+        actions.move_to_element(button).perform()
+        button.click()
+        return True
+
+    except:
+        try:
+            # Если обычный клик не работает, пробуем JavaScript клик
+            driver.execute_script("arguments[0].click();", button)
+            return True
+        except:
+            return False
+
+
+def scroll(driver):
+    """Функция прокрутки страницы"""
+    # Если кнопка не найдена пролистываем до конца страницы
+    return driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+
+def get_last_article_date(articles):
+    """Функция полученпия даты последней статьи"""
+
+    last_article = articles[-1]
+
+    time_tag = last_article.find_element(By.TAG_NAME, "time")
+    date_str = time_tag.get_attribute("datetime")[:10]
+
+    return datetime.strptime(date_str, "%Y-%m-%d")
+
+
+def get_article_title(article):
+    """Функция получения заголовка статьи"""
+    return article.find_element(By.TAG_NAME, "h3").text.strip()
+
+
+def get_article_date(article):
+    """Функция получения даты статьи"""
+    time_tag = article.find_element(By.TAG_NAME, "time")
+    date_str = time_tag.get_attribute("datetime")[:10]
+    # date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+
+    return date_str
+
+
+def get_article_link(article):
+    """Функция получения link (ссылки) статьи"""
+    link_tag = article.find_element(By.TAG_NAME, "a")
+    href = link_tag.get_attribute("href")
+    if href.startswith("http"):
+        return href
+    elif href.startswith("/"):
+        return URL + href
+    else:
+        return URL + "/" + href
+
+
+def load_more(driver):
+    """Функция подгрузки статей"""
+    old_article_count = len(get_articles(driver))
+
+    if button_check(driver) is not None:
+        button_push(driver)
+    else:
+        scroll(driver)
+
+    WebDriverWait(driver, 10).until(lambda d: len(get_articles(d)) > old_article_count)
+
+
+target_date_str = "2026-02-09"
+target_date = datetime.strptime(target_date_str, "%Y-%m-%d")
+driver = create_driver()
+# try:
+# open_site(driver, BASE_URL)
+# except Exception as e:
+#     print(f"Ошибка - {e}")
+open_site(driver, BASE_URL)
+# seen_links = set()
+processed_count = 0
+start_time = time.time()
+
+conn = init_db()
+
+try:
+    while True:
+
+        articles = get_articles(driver)
+
+        if not articles:
+            break
+
+        new_articles = articles[processed_count:]
+
+        # last_date = get_last_article_date(articles)
+
+        for article in new_articles:
+
+            link = get_article_link(article)
             # print(link)
+            article_date = get_article_date(article)
 
-        # Ищем дату
-        date_tag = article.find("time")
-        date = date_tag["datetime"][:10] if date_tag else "Без даты"
-        # print(date)
-        if web_driver(link, driver):
-            print(f"{date} – {title} – {link}")
-            with open("try_2.txt", "a", encoding="utf-8") as f:
-                f.write(f"{date} – {title} – {link}\n")
-        else:
-            print("Пазла тут нет")
+            title = get_article_title(article)
 
-    print("\n[bold green]✓ Поиск завершен![/bold green]")
-    return
+            article_date_obj = datetime.strptime(article_date, "%Y-%m-%d")
 
+            if article_date_obj <= target_date:
+                print("Достигнута целевая дата")
+                break
 
-while len(article_finder(a)) <= 200:
-    button_check()
-    print(len(article_finder(a)))
-    if len(article_finder(a)) == 50:
-        print("цикл завершен")
-        articl_data(a)
+            driver.execute_script("window.open(arguments[0]);", link)
+            driver.switch_to.window(driver.window_handles[1])
+
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        "//span[contains(text(),'Хватай свой пазл!') or contains(text(), 'Тут пазла нет!')]",
+                    )
+                )
+            )
+
+            has_puzzle = puzzle_check(driver)
+
+            if has_puzzle:
+                print(f"{article_date}--{title}--{link}")
+
+            try:
+                save_article(conn, link, article_date, has_puzzle)
+            except Exception as e:
+                print(f"Ошибка при сохранении статьи {title}: {e}")
+
+            # else:
+            #     print("Здесь пазла нет")
+
+            driver.close()
+            driver.switch_to.window(driver.window_handles[0])
+
+        conn.commit()
+
+        # if link in seen_links:
+        #     continue
+
+        # seen_links.add(link)
+
+        processed_count = len(articles)
+
+        load_more(driver)
+        new_count = len(get_articles(driver))
+
+        if new_count == processed_count:
+            print("Статьи закончились")
+            break
+finally:
+    conn.close()
+    close_browser(driver)
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    hours = int(execution_time // 3600)
+    minutes = int((execution_time % 3600) // 60)
+    seconds = execution_time % 60
+
+    if hours > 0:
+        print(f"Время выполнения: {hours}ч {minutes}мин {seconds:.1f}с")
+    elif minutes > 0:
+        print(f"Время выполнения: {minutes}мин {seconds:.1f}с")
+    else:
+        print(f"Время выполнения: {seconds:.2f}с")
+    exit()
