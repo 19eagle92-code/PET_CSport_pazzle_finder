@@ -1,3 +1,5 @@
+from itertools import count
+
 from src.config import URL, BASE_URL, target_date_str
 from src.db import init_db, save_article
 from src.driver import create_driver, open_site, close_browser
@@ -10,6 +12,7 @@ from src.scraper.article_page import (
     load_more,
 )
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -19,6 +22,9 @@ from datetime import datetime
 import time
 
 if __name__ == "__main__":
+
+    count = 0
+    stop = False
 
     target_date = datetime.strptime(target_date_str, "%Y-%m-%d")
 
@@ -55,24 +61,38 @@ if __name__ == "__main__":
 
                 if article_date_obj <= target_date:
                     print("Достигнута целевая дата")
+                    stop = True
                     break
 
                 driver.execute_script("window.open(arguments[0]);", link)
                 driver.switch_to.window(driver.window_handles[1])
 
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located(
-                        (
-                            By.XPATH,
-                            "//span[contains(text(),'Хватай свой пазл!') or contains(text(), 'Тут пазла нет!')]",
+                try:
+
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located(
+                            (
+                                By.XPATH,
+                                "//span[contains(text(),'Хватай свой пазл!') or contains(text(), 'Тут пазла нет!')]",
+                            )
                         )
                     )
-                )
+                except TimeoutException:
+                    has_puzzle = False
 
-                has_puzzle = puzzle_check(driver)
+                else:
+
+                    has_puzzle = puzzle_check(driver)
 
                 if has_puzzle:
+                    count = 0
                     print(f"{article_date}--{title}--{link}")
+                else:
+                    count += 1
+
+                if count >= 5:
+                    print("Акция с пазлаами закончилась")
+                    stop = True
 
                 try:
                     save_article(conn, link, article_date, has_puzzle)
@@ -84,6 +104,9 @@ if __name__ == "__main__":
 
                 driver.close()
                 driver.switch_to.window(driver.window_handles[0])
+
+                if stop:
+                    break
 
             conn.commit()
 
@@ -100,6 +123,10 @@ if __name__ == "__main__":
             if new_count == processed_count:
                 print("Статьи закончились")
                 break
+
+            if stop:
+                break
+
     finally:
         conn.close()
         close_browser(driver)

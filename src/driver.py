@@ -14,9 +14,9 @@ def create_driver():
     return driver
 
 
-def open_site(driver, URL):
+def open_site(driver, url):
     """Функция открывающая сайт"""
-    return driver.get(URL)
+    return driver.get(url)
 
 
 def close_browser(driver):

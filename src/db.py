@@ -1,9 +1,10 @@
 import sqlite3
+from src.config import DB_PATH
 
 
 def init_db():
     """Функцуия создания таблицы ДБ"""
-    conn = sqlite3.connect("articles.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
