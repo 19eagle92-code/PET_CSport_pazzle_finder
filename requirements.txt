@@ -1,5 +1,2 @@
-beautifulsoup4     4.14.3
-requests           2.32.5
 pytest             9.0.2
 selenium           4.40.0
-rich               14.3.2
