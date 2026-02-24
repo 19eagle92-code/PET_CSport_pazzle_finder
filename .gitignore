@@ -12,6 +12,8 @@ env/
 # IDE
 .vscode/
 *.sublime-workspace
+.vscode
+vscode
 
 # pip
 pip-log.txt

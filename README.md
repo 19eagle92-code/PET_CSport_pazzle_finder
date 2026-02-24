@@ -25,7 +25,7 @@
 bash
 python -m venv .venv
 
-# Windows PowerShell:
+### Windows PowerShell:
 .venv\Scripts\Activate.ps1
 
 2. Установить зависимости:
