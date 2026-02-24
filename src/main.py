@@ -1,7 +1,7 @@
-from config import URL, BASE_URL, target_date_str
-from db import init_db, save_article
-from driver import create_driver, open_site, close_browser
-from article_page import (
+from src.config import URL, BASE_URL, target_date_str
+from src.db import init_db, save_article
+from src.driver import create_driver, open_site, close_browser
+from src.scraper.article_page import (
     get_articles,
     get_article_link,
     get_article_date,

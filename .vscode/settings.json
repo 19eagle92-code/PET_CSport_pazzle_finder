@@ -18,6 +18,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.analysis.extraPaths": [
-        "./src/scraper"
+        "./src/scraper",
+        "./src"
     ]
 }
