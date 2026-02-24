@@ -11,6 +11,7 @@ from src.scraper.article_page import (
     puzzle_check,
     load_more,
 )
+from src.work_timer import work_timer
 
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
@@ -20,6 +21,8 @@ from datetime import datetime
 
 
 import time
+
+import work_timer
 
 if __name__ == "__main__":
 
@@ -110,11 +113,6 @@ if __name__ == "__main__":
 
             conn.commit()
 
-            # if link in seen_links:
-            #     continue
-
-            # seen_links.add(link)
-
             processed_count = len(articles)
 
             load_more(driver)
@@ -132,15 +130,5 @@ if __name__ == "__main__":
         close_browser(driver)
 
         end_time = time.time()
-        execution_time = end_time - start_time
-        hours = int(execution_time // 3600)
-        minutes = int((execution_time % 3600) // 60)
-        seconds = execution_time % 60
-
-        if hours > 0:
-            print(f"Время выполнения: {hours}ч {minutes}мин {seconds:.1f}с")
-        elif minutes > 0:
-            print(f"Время выполнения: {minutes}мин {seconds:.1f}с")
-        else:
-            print(f"Время выполнения: {seconds:.2f}с")
+        work_timer(end_time, start_time)
         exit()
